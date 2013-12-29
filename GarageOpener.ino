@@ -58,7 +58,9 @@ void loop() {
         
         if (c == '\n' && currentLineIsBlank) {
           writeHTTPHeaders(client);
-          writeHTTPLEDPage(client);
+          //writeHTTPIndex(client);
+          //writeHTTPLEDPage(client);
+          writeHTTPLEDStatusPage(client);
           break;
         }
         
