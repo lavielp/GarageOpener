@@ -5,48 +5,31 @@ void writeHTTPHeaders(EthernetClient &CL) {
   CL.println();
 }
 
-void writeHTTPIndex(EthernetClient &CL){
+
+
+void writeHTTPAJAXwithButton(EthernetClient &CL) {
   CL.println("<!DOCTYPE html>");
   CL.println("<html>");
   CL.println("<head>");
   CL.println("<title>Arduino Web Page</title>");
-  CL.println("</head>");
-  CL.println("<body>");
-  CL.println("<h1>Hello World!</h1>");
-  CL.println("<p>A web page from the arduino server</p>");
-  CL.println("<p>Using a seperate for the web page</p>");
-  CL.println("</body>");
-  CL.println("</html>");
-}
-
-void writeHTTPLEDPage(EthernetClient &CL) {
-  CL.println("<!DOCTYPE html>");
-  CL.println("<html>");
-  CL.println("<head>");
-  CL.println("<title>Arduino LED Control</title>");
-  CL.println("</head>");
-  CL.println("<body>");
-  CL.println("<h1>LED</h1>");
-  CL.println("<p>Click to switch LED on and off.</p>");
-  CL.println("<form method=\"get\">");
-  processCheckbox(CL);
-  //CL.println("<input type=\"checkbox\" name=\"LED2\" value=\"2\" onclick=\"submit();\">LED2");
-  CL.println("</form>");
-  CL.println("</body>");
-  CL.println("</html>");
-}
-
-void writeHTTPLEDStatusPage(EthernetClient &CL) {
-  CL.println("<!DOCTYPE html>");
-  CL.println("<html>");
-  CL.println("<head>");
-  CL.println("<title>Arduino Read Switch State</title>");
-  CL.println("<meta http-equiv=\"refresh\" content=\"1\">");
-  CL.println("</head>");
-  CL.println("<body>");
-  CL.println("<h1>Switch</h1>");
-  CL.println("<p>Switch state is: </p>");
-  getSwitchState(CL);
+  CL.println("<script>");
+  CL.println("function GetSwitchState() {");
+  CL.println("nocache = \"&nocache=\" + Math.random() * 1000000;");
+  CL.println("var request = new XMLHttpRequest();");
+  CL.println("request.onreadystatechange = function() {");
+  CL.println("if (this.readyState == 4) {");
+  CL.println("if (this.status == 200) {");
+  CL.println("if (this.responseText != null) {");
+  CL.println("document.getElementById(\"switch_txt\").innerHTML = this.responseText;");
+  CL.println("}}}}");
+  CL.println("request.open(\"GET\", \"ajax_switch\" + nocache, true);");
+  CL.println("request.send(null);");
+  CL.println("setTimeout('GetSwitchState()',1000);}");
+  CL.println("</script>");
+  CL.println("<body onload=\"GetSwitchState()\">");
+  CL.println("<h1>Arduino AJAX Switch Status</h1>");
+  CL.println("<p id=\"switch_txt\">Switch state: Not requested...</p>");
+  //CL.println("<button type=\"button\" onclick=\"GetSwitchState()\">Get Switch State</button>");
   CL.println("</body>");
   CL.println("</html>");
 }
@@ -74,5 +57,13 @@ void getSwitchState(EthernetClient &CL) {
     CL.println("<p>ON</p>");
   } else {
     CL.println("<p>OFF</p>");
+  }
+}
+
+void getSwitchStateAJAX(EthernetClient &CL) {
+  if (digitalRead(onOffSwitchPin)) {
+    CL.println("Switch state: ON");
+  } else {
+    CL.println("Switch state: OFF");
   }
 }

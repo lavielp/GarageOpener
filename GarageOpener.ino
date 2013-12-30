@@ -55,12 +55,25 @@ void loop() {
         // Read and save the client request
         char c = client.read();
         HTTP_req += c;
-        
+        //Serial.print("client.connected: ");
+        //Serial.println(client.connected());
+        //Serial.print("client.available: ");
+        //Serial.println(client.available());
         if (c == '\n' && currentLineIsBlank) {
           writeHTTPHeaders(client);
           //writeHTTPIndex(client);
           //writeHTTPLEDPage(client);
-          writeHTTPLEDStatusPage(client);
+          //writeHTTPLEDStatusPage(client);
+          Serial.println(HTTP_req);
+          Serial.print("indexOf: ");
+          Serial.println(HTTP_req.indexOf("ajax_switch"));
+          if (HTTP_req.indexOf("ajax_switch") > 0) {
+            getSwitchStateAJAX(client);
+          } else {
+            writeHTTPAJAXwithButton(client);
+          }
+          //Serial.println(HTTP_req);
+          HTTP_req = "";
           break;
         }
         
