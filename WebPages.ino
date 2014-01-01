@@ -24,7 +24,7 @@ void writeHTTPAJAXwithButton(EthernetClient &CL) {
   CL.println("}}}}");
   CL.println("request.open(\"GET\", \"ajax_switch\" + nocache, true);");
   CL.println("request.send(null);");
-  CL.println("setTimeout('GetSwitchState()',1000);}");
+  CL.println("setTimeout('GetSwitchState()',500);}");
   CL.println("</script>");
   CL.println("<body onload=\"GetSwitchState()\">");
   CL.println("<h1>Arduino AJAX Switch Status</h1>");
