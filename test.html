@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+  <title>Web Messaging Testing</title> 
+  <script type="text/javascript" src="../WebSocket/mqttws31.js"></script>
+<script type="text/javascript">
+  var clientId = "Client" + new Date().getSeconds()+ new Date().getMilliseconds();
+  var client;
+  
+  function doConnect() {
+console.log("hello world");
+    //client = new Messaging.Client(location.hostname, Number(location.port), clientId);
+    client = new Messaging.Client("192.168.0.106", 8000, "javascriptClient");
+    //client.connect();
+    client.onConnect = onConnect;
+    client.onMessageArrived = onMessageArrived;
+    client.onConnectionLost = onConnectionLost;
+    client.connect({onSuccess : onConnect});
+  }
+  
+  function doSubscribe() {
+    client.subscribe("test");
+  }
+  
+  function doSend(form) {
+    var message = new Messaging.Message("pressed");
+    message.destinationName = "test";
+    client.send(message);
+  }
+  
+  function doDisconnect() {
+     client.disconnect();
+  }
+  
+  // Messaging callbacks
+  
+  function onConnect() {
+    var form = document.getElementById("tutorial");
+    form.connected.checked = true;
+  }
+  
+  function onConnectionLost(responseObject) {
+    var form = document.getElementById("tutorial");
+    form.connected.checked = false;
+    if (responseObject.errorCode !== 0)
+    alert(client.clientId + "\n" + responseObject.errorCode);
+  }
+  
+  function onMessageArrived(message) {
+	console.log(message.payloadString);
+  	var form = document.getElementById("tutorial");
+  	form.receiveMsg.value = message.payloadString;
+  }
+</script>
+</head>
+<body>
+<form id="tutorial">
+	<fieldset>
+		<legend> Connect </legend>
+		First, make a connection to the server, and set up a call back used
+		if a message arrives for this client.
+		<br> <input type="button" value="Connect" onClick="doConnect(this.form)" name="Connect" />
+		<input type="checkbox" name="connected" disabled="disabled" />
+	</fieldset>
+  
+	<fieldset>
+		<legend> Subscribe </legend>
+		Make a subscription to topic "/World".
+		<br> <input type="button" value="Subscribe"	onClick="doSubscribe(this.form)" />
+	</fieldset>
+  
+	<fieldset>
+		<legend> Send </legend>
+		Create a Message object containing the word "Hello" and then publish it at the server.
+		<br> <input type="button" value="Send" onClick="doSend(this.form)" />
+	</fieldset>
+  
+	<fieldset>
+		<legend> Receive </legend>
+		A copy of the published Message is received in the callback we created earlier.
+		<br> <textarea name="receiveMsg" rows="1" cols="40" disabled="disabled"></textarea>
+	</fieldset>
+  
+	<fieldset>
+		<legend> Disconnect </legend>
+		Now disconnect this client from the server.
+		<br> <input type="button" value="Disconnect" onClick="doDisconnect(this.form)" />
+	</fieldset>
+</form>
+</body>
+</html>

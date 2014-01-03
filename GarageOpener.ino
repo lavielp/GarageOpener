@@ -1,14 +1,12 @@
 #include <SPI.h>
 #include <Ethernet.h>
-#include <WebPages.h>
+#include <PubSubClient.h>
 
 // Values to setup the ethernet connection
 byte mac[] = {0xDE, 0xAD, 0xEF, 0xBE, 0xFE, 0xED};
+byte mqttbroker[] = {192,168,0,106};
 IPAddress ip(192,168,0,85);
-EthernetServer server(80);
 
-// Variables for processing web requests
-String HTTP_req;
 
 // Values to setup the button
 int lastSwitchState = 0;
@@ -19,6 +17,40 @@ const int outputPin = 2;
 // Values for the LED
 const int ledPin = 5;
 boolean LED_status = 0;
+
+// byte string "pressed"
+byte pressed[] = {0x70,0x72,0x65,0x73,0x73,0x65,0x64};
+String strPayload;
+
+void mycallback(char* topic, byte* payload, unsigned int length) {
+  // Replace the new line character with a null character to make
+  // the byte* payload a C style string array.  Then cast it as a
+  // String so we can take a better look at it.
+  // The \n character was coming from the stdinpub client
+  // just add the null character
+  payload[length] = '\0';
+  strPayload = String((char*)payload);
+  
+  Serial.print("topic: ");
+  Serial.print(topic);
+  Serial.print("\tpayload: ");
+  Serial.print(strPayload);
+  //Serial.write(payload,length);
+  Serial.print("\tlength: ");
+  Serial.println(length);
+  if(strPayload == "pressed") {
+    Serial.println("True");
+    toggleLED();
+    sendLEDStatus();
+  }
+}
+
+// Stuff for MQTT
+EthernetClient ethClient;
+PubSubClient client(mqttbroker, 1883, mycallback, ethClient);
+
+// Topic this device publishes too
+//"/devices/arduino/led/status";
 
 void setup() {
   Serial.begin(9600);
@@ -39,61 +71,50 @@ void setup() {
   digitalWrite(outputPin,LOW);
   
   Ethernet.begin(mac,ip);
-  server.begin();
+  if(client.connect("arduinoClient")) {
+    client.publish("test","Client connected");
+    client.subscribe("test");
+  }
 }
 
 void loop() {
   switchState = digitalRead(onOffSwitchPin);
   delay(1);
   
-  EthernetClient client = server.available();
+  client.loop();
   
-  if(client) {
-    boolean currentLineIsBlank = true;
-    while (client.connected()) {
-      if (client.available()) {
-        // Read and save the client request
-        char c = client.read();
-        HTTP_req += c;
-        //Serial.print("client.connected: ");
-        //Serial.println(client.connected());
-        //Serial.print("client.available: ");
-        //Serial.println(client.available());
-        if (c == '\n' && currentLineIsBlank) {
-          writeHTTPHeaders(client);
-          //writeHTTPIndex(client);
-          //writeHTTPLEDPage(client);
-          //writeHTTPLEDStatusPage(client);
-          Serial.println(HTTP_req);
-          Serial.print("indexOf: ");
-          Serial.println(HTTP_req.indexOf("ajax_switch"));
-          if (HTTP_req.indexOf("ajax_switch") > 0) {
-            getSwitchStateAJAX(client);
-          } else {
-            writeHTTPAJAXwithButton(client);
-          }
-          //Serial.println(HTTP_req);
-          HTTP_req = "";
-          break;
-        }
-        
-        if ( c == '\n') {
-          currentLineIsBlank = true;
-        }
-        else if (c != '\r') {
-          currentLineIsBlank = false;
-        }
-      }
-    }
-    delay(1);
-    client.stop(); 
-  }
   if (buttonWasPressed()) {
-    pressGarageButton();
+    client.publish("test", "button pressed");
     toggleLED();
+    sendLEDStatus();
   }
   
   lastSwitchState = switchState;
 }
 
+boolean buttonWasPressed(){ 
+  if (!lastSwitchState && switchState) {
+    return true;
+  } else {
+    return false;
+  }
+}
 
+void toggleLED() {
+  // Turn the LED on or off
+  if (digitalRead(ledPin)) {
+    digitalWrite(ledPin, LOW);
+    LED_status = 0;
+  } else {
+    digitalWrite(ledPin, HIGH);
+    LED_status = 1;
+  }
+}
+
+void sendLEDStatus() {
+  if (LED_status) {
+    client.publish("test", "on");
+  } else {
+    client.publish("test", "off");
+  }
+}
