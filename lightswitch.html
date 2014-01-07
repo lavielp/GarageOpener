@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+  <title>Web Messaging Testing</title> 
+  <link href="./style.css" rel="stylesheet" type="text/css" />
+  <script type="text/javascript" src="./mqttws31.js"></script>
+<script type="text/javascript">
+  var clientId = "Client" + new Date().getSeconds()+ new Date().getMilliseconds();
+  var client;
+  
+  function doConnect() {
+    //console.log("hello from doConnect");
+    //client = new Messaging.Client(location.hostname, Number(location.port), clientId);
+
+    //client = new Messaging.Client("192.168.0.106", 8000, "javascriptClient");
+    client = new Messaging.Client("67.170.106.63", 8000, "javascriptClient");
+    client.onConnect = onConnect;
+    client.onMessageArrived = onMessageArrived;
+    client.onConnectionLost = onConnectionLost;
+    client.connect({onSuccess : onConnect});
+  }
+  
+  function doSubscribe() {
+    client.subscribe("/devices/led/light/status");
+    client.subscribe("/devices/led/button/status");
+  }
+  
+  function doSend() {
+    var message = new Messaging.Message("pressed");
+    message.destinationName = "/devices/pages/light/button/event";
+    client.send(message);
+  }
+  
+  function doDisconnect() {
+     client.disconnect();
+  }
+  
+  // Messaging callbacks
+  
+  function onConnect() {
+    var mqttstate = document.getElementById("mqttState");
+    mqttstate.innerHTML = "Connected";
+    doSubscribe();
+  }
+  
+  function onConnectionLost(responseObject) {
+    var form = document.getElementById("lightSwitchForm");
+    form.mqttState.innerHTML = "Disconnected";
+    //form.connected.checked = false;
+    if (responseObject.errorCode !== 0)
+    alert(client.clientId + "\n" + responseObject.errorCode);
+  }
+  
+  function onMessageArrived(message) {
+        //var message = (message.payloadString).trim();
+	//console.log(message.payloadString);
+	//console.log((message.payloadString).trim());
+        //console.log(message.destinationName);
+        
+        if (message.destinationName == '/devices/led/light/status') {
+          var lightstate = document.getElementById("lightState");
+          lightstate.innerHTML = (message.payloadString).trim(); //message.payloadString;
+        }
+        if (message.destinationName == '/devices/led/button/status') {
+          var buttonstate = document.getElementById("buttonState");
+          buttonstate.innerHTML = (message.payloadString).trim(); //message.payloadString;
+        }
+
+  }
+</script>
+</head>
+<body onload="doConnect()">
+  <form id="lightSwitchForm">
+    <fieldset>
+      <br>MQQT State: <div id="mqttState"></div>
+      <br>Light State: <div id="lightState"></div>
+      <br>Button State: <div id="buttonState"></div>
+      <p><button id="switch"></button>
+      <p><input type="button" value="Light Switch" onClick="doSend()" name="lightSwitch" />
+    </fieldset>
+  </form>
+</body>
+</html>

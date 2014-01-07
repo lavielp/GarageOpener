@@ -4,7 +4,7 @@
 
 // Values to setup the ethernet connection
 byte mac[] = {0xDE, 0xAD, 0xEF, 0xBE, 0xFE, 0xED};
-byte mqttbroker[] = {192,168,0,106};
+byte mqttbroker[] = {192,168,0,101};
 IPAddress ip(192,168,0,85);
 
 
@@ -16,32 +16,22 @@ const int outputPin = 2;
 
 // Values for the LED
 const int ledPin = 5;
-boolean LED_status = 0;
+boolean LEDState = 0;
+boolean lastLEDState = 0;
 
 // byte string "pressed"
-byte pressed[] = {0x70,0x72,0x65,0x73,0x73,0x65,0x64};
-String strPayload;
+//byte pressed[] = {0x70,0x72,0x65,0x73,0x73,0x65,0x64};
+//String strPayload;
 
 void mycallback(char* topic, byte* payload, unsigned int length) {
-  // Replace the new line character with a null character to make
-  // the byte* payload a C style string array.  Then cast it as a
-  // String so we can take a better look at it.
-  // The \n character was coming from the stdinpub client
-  // just add the null character
+  // Add a null character to make the byte* a C style string.
+  // Then cast it as a string to read.
   payload[length] = '\0';
-  strPayload = String((char*)payload);
+  //strPayload = String((char*)payload);
   
-  Serial.print("topic: ");
-  Serial.print(topic);
-  Serial.print("\tpayload: ");
-  Serial.print(strPayload);
-  //Serial.write(payload,length);
-  Serial.print("\tlength: ");
-  Serial.println(length);
-  if(strPayload == "pressed") {
-    Serial.println("True");
+  //if(strPayload == "pressed") {
+  if(String((char*)payload) == "pressed") {
     toggleLED();
-    sendLEDStatus();
   }
 }
 
@@ -71,25 +61,39 @@ void setup() {
   digitalWrite(outputPin,LOW);
   
   Ethernet.begin(mac,ip);
-  if(client.connect("arduinoClient")) {
-    client.publish("test","Client connected");
-    client.subscribe("test");
+  
+  while(! client.connected()) {
+      client.connect("arduinoClient");
   }
+  
+  if(client.connected()) {
+    client.publish("/devices/led/mqtt", "connected");
+    sendLEDStatus();
+    client.subscribe("/devices/pages/light/button/event");
+  }
+  
+  /* if(client.connect("arduinoClient")) {
+    client.subscribe("/devices/pages/light/button/event");
+  }*/
 }
 
 void loop() {
   switchState = digitalRead(onOffSwitchPin);
   delay(1);
+  if (buttonWasPressed()) {
+    //client.publish("test", "button pressed");
+    toggleLED();
+    //sendLEDStatus();
+  }
+  lastSwitchState = switchState;
+  
   
   client.loop();
   
-  if (buttonWasPressed()) {
-    client.publish("test", "button pressed");
-    toggleLED();
+  if (LEDState != lastLEDState) {
     sendLEDStatus();
   }
-  
-  lastSwitchState = switchState;
+  lastLEDState = LEDState;
 }
 
 boolean buttonWasPressed(){ 
@@ -104,17 +108,18 @@ void toggleLED() {
   // Turn the LED on or off
   if (digitalRead(ledPin)) {
     digitalWrite(ledPin, LOW);
-    LED_status = 0;
+    LEDState = 0;
   } else {
     digitalWrite(ledPin, HIGH);
-    LED_status = 1;
+    LEDState = 1;
   }
 }
 
 void sendLEDStatus() {
-  if (LED_status) {
-    client.publish("test", "on");
+  if (LEDState) {
+    //client.publish("/devices/led/light/status", "on",length);
+    client.publish("/devices/led/light/status", (uint8_t*)"on",2,1);
   } else {
-    client.publish("test", "off");
+    client.publish("/devices/led/light/status", (uint8_t*)"off",3,1);
   }
 }
