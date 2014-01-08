@@ -5,3 +5,8 @@
 	background-image: url('./icons/126705-simple-black-square-icon-business.png');
 	background-size: 100%;
 }
+
+#switchLight {
+	width: 32px;
+	height: 32px;
+}

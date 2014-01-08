@@ -34,6 +34,7 @@
     var message = new Messaging.Message("pressed");
     message.destinationName = "/devices/pages/light/button/event";
     client.send(message);
+    document.getElementById("switchLight").src = './icons/LightBulbOff.png';
   }
   
   function doDisconnect() {
@@ -45,6 +46,7 @@
   function onConnect() {
     var mqttstate = document.getElementById("mqttState");
     mqttstate.innerHTML = "Connected";
+    document.getElementById("switchLight").src = './icons/LightBulbOn.png';
     doSubscribe();
   }
   
@@ -78,7 +80,7 @@
       <br>MQQT State: <div id="mqttState"></div>
       <br>Light State: <div id="lightState"></div>
       <br>Button State: <div id="buttonState"></div>
-      <p><button id="switch"></button>
+      <p><button id="switch"><img id="switchLight"/></button>
       <p><input type="button" value="Light Switch" onClick="doSend()" name="lightSwitch" />
     </fieldset>
   </form>
