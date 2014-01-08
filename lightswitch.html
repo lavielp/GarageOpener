@@ -4,28 +4,21 @@
 
 <head>
   <title>Web Messaging Testing</title> 
-<<<<<<< HEAD
   <link href="./style.css" rel="stylesheet" type="text/css" />
-=======
->>>>>>> aa625992ce693d1d3c393440bf0a81ec48188683
   <script type="text/javascript" src="./mqttws31.js"></script>
 <script type="text/javascript">
   var clientId = "Client" + new Date().getSeconds()+ new Date().getMilliseconds();
   var client;
   
   function doConnect() {
-<<<<<<< HEAD
     //console.log("hello from doConnect");
     //client = new Messaging.Client(location.hostname, Number(location.port), clientId);
 
     //client = new Messaging.Client("192.168.0.106", 8000, "javascriptClient");
     client = new Messaging.Client("67.170.106.63", 8000, "javascriptClient");
-=======
-    console.log("hello from doConnect");
     //client = new Messaging.Client(location.hostname, Number(location.port), clientId);
 
-    client = new Messaging.Client("172.25.133.129", 8000, "javascriptClient");
->>>>>>> aa625992ce693d1d3c393440bf0a81ec48188683
+    //client = new Messaging.Client("172.25.133.129", 8000, "javascriptClient");
     client.onConnect = onConnect;
     client.onMessageArrived = onMessageArrived;
     client.onConnectionLost = onConnectionLost;
@@ -66,13 +59,6 @@
   function onMessageArrived(message) {
         //var message = (message.payloadString).trim();
 	//console.log(message.payloadString);
-<<<<<<< HEAD
-	//console.log((message.payloadString).trim());
-        //console.log(message.destinationName);
-=======
-	console.log((message.payloadString).trim());
-        console.log(message.destinationName);
->>>>>>> aa625992ce693d1d3c393440bf0a81ec48188683
         
         if (message.destinationName == '/devices/led/light/status') {
           var lightstate = document.getElementById("lightState");
@@ -92,10 +78,7 @@
       <br>MQQT State: <div id="mqttState"></div>
       <br>Light State: <div id="lightState"></div>
       <br>Button State: <div id="buttonState"></div>
-<<<<<<< HEAD
       <p><button id="switch"></button>
-=======
->>>>>>> aa625992ce693d1d3c393440bf0a81ec48188683
       <p><input type="button" value="Light Switch" onClick="doSend()" name="lightSwitch" />
     </fieldset>
   </form>
